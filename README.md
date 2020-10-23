@@ -2,5 +2,4 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/aruiz14/slice)](https://goreportcard.com/report/github.com/aruiz14/slice)
 
 ## TODO
- - Make it work with negative steps
   Add proper docs

@@ -4,6 +4,7 @@
 package slice
 
 import (
+	"math"
 	"strconv"
 	"testing"
 )
@@ -36,10 +37,14 @@ func TestBounds(t *testing.T) {
 		{start: 0, end: 2, step: 1, wantLower: 0, wantUpper: 2},
 		{start: 1, end: 1, step: 1, wantLower: 1, wantUpper: 1},
 		{start: 10, end: 12, step: 1, wantLower: len(input), wantUpper: len(input)},
-		{start: -2, end: 4, step: 1, wantLower: 3, wantUpper: 4},
-		{start: -3, end: -1, step: 1, wantLower: 2, wantUpper: 4},
+		{start: -2, end: 4, step: 1, wantLower: 4, wantUpper: 4},
+		{start: -3, end: -1, step: 1, wantLower: 3, wantUpper: 5},
 
-		// TODO: test negative step
+		{start: 0, end: 2, step: -1, wantLower: 2, wantUpper: 0},
+		{start: 1, end: 1, step: -1, wantLower: 1, wantUpper: 1},
+		{start: 10, end: 12, step: -1, wantLower: len(input) - 1, wantUpper: len(input) - 1},
+		{start: -2, end: 4, step: -1, wantLower: 4, wantUpper: 4},
+		{start: -3, end: -1, step: -1, wantLower: 5, wantUpper: 3},
 	}
 	for i, tc := range testCases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {
@@ -57,16 +62,35 @@ func TestSlice(t *testing.T) {
 		got  []int
 		want []int
 	}{
+		// No delimiters
 		{Slice(input, nil, nil, nil), input},
+		// Out-of-bounds
 		{Slice(input, pInt(6), pInt(7), nil), []int{}},
-		{Slice(input, pInt(0), pInt(2), nil), []int{0, 1, 2}},
-		{Slice(input, pInt(0), pInt(10), nil), []int{0, 1, 2, 3, 4, 5}},
-		{Slice(input, pInt(0), pInt(-1), nil), []int{0, 1, 2, 3, 4}},
-		{Slice(input, pInt(-3), pInt(-2), nil), []int{2, 3}},
-		{Slice(input, pInt(-4), pInt(-4), nil), []int{1}},
-		{Slice(input, pInt(2), pInt(5), pInt(2)), []int{2, 4}},
+		// Positive delimiters
+		{Slice(input, nil, pInt(2), nil), []int{0, 1}},
+		{Slice(input, pInt(0), pInt(2), nil), []int{0, 1}},
+		{Slice(input, nil, pInt(10), nil), []int{0, 1, 2, 3, 4, 5}},
+		{Slice(input, nil, pInt(math.MaxInt32), nil), []int{0, 1, 2, 3, 4, 5}},
+		{Slice(input, pInt(-math.MaxInt32), nil, nil), []int{0, 1, 2, 3, 4, 5}},
+		// Negative delmiters
+		{Slice(input, nil, pInt(-1), nil), []int{0, 1, 2, 3, 4}},
+		{Slice(input, pInt(-3), pInt(-2), nil), []int{3}},
+		{Slice(input, pInt(-4), pInt(-4), nil), []int{}},
+		{Slice(input, nil, pInt(-math.MaxInt32), nil), []int{}},
 
-		// TODO: add negative step tests
+		// Wider step
+		{Slice(input, nil, nil, pInt(0)), []int{}},
+		{Slice(input, nil, nil, pInt(2)), []int{0, 2, 4}},
+		{Slice(input, pInt(1), nil, pInt(2)), []int{1, 3, 5}},
+		{Slice(input, nil, nil, pInt(3)), []int{0, 3}},
+
+		// Negative
+		{Slice(input, nil, nil, pInt(-1)), []int{5, 4, 3, 2, 1, 0}},
+		{Slice(input, nil, nil, pInt(-2)), []int{5, 3, 1}},
+		{Slice(input, pInt(4), pInt(2), pInt(-1)), []int{4, 3}},
+		{Slice(input, pInt(-1), pInt(-4), pInt(-1)), []int{5, 4, 3}},
+		// {Slice(input, pInt(4), pInt(2), pInt(-1)), []int{5, 4, 3, 2, 1, 0}},
+		// {Slice(input, pInt(4), pInt(2), pInt(-1)), []int{5, 4, 3, 2, 1, 0}},
 	}
 	for i, tc := range testCases {
 		t.Run(strconv.Itoa(i), func(t *testing.T) {

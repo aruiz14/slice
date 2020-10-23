@@ -11,18 +11,16 @@ func Slice(a []int, pstart *int, pend *int, pstep *int) (res []int) {
 
 	step := defaultInt(pstep, 1)
 	if step == 0 {
-		return nil // should this be initialized?
+		return []int{}
 	}
 
 	lower, upper := bounds(pstart, pend, step, len(a))
 	if step > 0 {
-		for i := lower; i <= upper && i < len(a); i += step {
+		for i := lower; i < upper; i += step {
 			res = append(res, a[i])
 		}
 	} else {
-		// TODO: fix this
-		panic("not implemented")
-		for i := upper; lower < i && i < len(a); i += step {
+		for i := upper; lower < i; i += step {
 			res = append(res, a[i])
 		}
 	}
@@ -35,14 +33,14 @@ func bounds(pstart, pend *int, step, length int) (lower, upper int) {
 		start := normalize(defaultInt(pstart, 0))
 		end := normalize(defaultInt(pend, length))
 
-		lower = minInt(length, maxInt(0, start))
-		upper = minInt(length, maxInt(0, end))
+		lower = minInt(maxInt(start, 0), length)
+		upper = minInt(maxInt(end, 0), length)
 	} else {
 		start := normalize(defaultInt(pstart, length-1))
-		end := normalize(defaultInt(pend, -(length - 1)))
+		end := normalize(defaultInt(pend, -length-1))
 
-		lower = minInt(length-1, maxInt(-1, end))
-		upper = maxInt(length-1, maxInt(-1, start))
+		upper = minInt(maxInt(start, -1), length-1)
+		lower = minInt(maxInt(end, -1), length-1)
 	}
 	return
 }
@@ -58,10 +56,10 @@ type normalizeFunc func(int) int
 
 func normalizer(length int) normalizeFunc {
 	return func(v int) int {
-		if v < 0 {
-			return length - 1 + v
+		if v >= 0 {
+			return v
 		}
-		return v
+		return length + v
 	}
 }
 
